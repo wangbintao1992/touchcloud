@@ -13,4 +13,9 @@ public class Constants {
 	public static final String NO_DATA = "0001";
 	
 	public static final String NO_DATA_MSG = "no data";
+	
+	public static final String DUPLICATE_USER = "0002";
+	
+	public static final String DUPLICATE_CODE = "duplicate user";
+		
 }

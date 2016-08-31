@@ -35,11 +35,24 @@ public class UserDao {
 		return null;
 	}
 	
-	public User getUserById(int userId) {
+	public User getUserById(String userId) {
 		return dao.fetch(User.class, userId);
 	}
 	
 	public void delete(User user) {
 		dao.delete(user);
+	}
+	
+	public boolean checkduplicateUser(String mobile) {
+		List<User> query = dao.query(User.class, Cnd.where("mobile", " = ", mobile));
+		
+		if(query == null)
+			return false;
+		
+		if(query.size() > 0) {
+			return true;
+		}
+		
+		return false;
 	}
 }
