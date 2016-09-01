@@ -1,11 +1,16 @@
 package com.touchCloud;
 
 import java.util.Date;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
 import java.util.UUID;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
 import javax.servlet.http.HttpServletRequest;
+
+import net.sf.json.JSONObject;
 
 import org.apache.commons.lang.StringUtils;
 import org.nutz.ioc.loader.annotation.Inject;
@@ -22,14 +27,14 @@ import org.nutz.mvc.annotation.POST;
 import org.nutz.mvc.annotation.PUT;
 import org.nutz.mvc.ioc.provider.ComboIocProvider;
 
+import com.google.gson.Gson;
 import com.touchCloud.dao.DevicesDao;
 import com.touchCloud.dao.UserDao;
 import com.touchCloud.pojo.Devices;
+import com.touchCloud.pojo.Sensors;
 import com.touchCloud.pojo.User;
 import com.touchCloud.vo.Constants;
 import com.touchCloud.vo.Result;
-
-import net.sf.json.JSONObject;
 
 /**
  * @author james
@@ -107,7 +112,6 @@ public class MainModule extends CloudModule{
 			return;
 		}
 		
-		json.put("userId", findUser.getUserId());
 		json.put("userkey", findUser.getUserKey());
 		renderJson(json.toString(), Mvcs.getResp());
 	}
@@ -116,10 +120,10 @@ public class MainModule extends CloudModule{
 	 * 新增
 	 */
 	@At("/v1.0/user/?")
-	@PUT
+	@POST
 	public void save(String user) {
 		Result result = new Result();
-
+		System.out.println(Mvcs.getReq().getParameter("test"));
 		try {
 			User newUser = Json.fromJson(User.class, user);
 
@@ -158,7 +162,7 @@ public class MainModule extends CloudModule{
 	 * 更新
 	 */
 	@At("/v1.0/user/?")
-	@POST
+	@PUT
 	public void update(String userString) {
 		Result result = new Result();
 
@@ -172,7 +176,6 @@ public class MainModule extends CloudModule{
 				return;
 			}
 			
-			//dulipate
 			User user = userDao.getUserById(newUser.getUserKey());
 			
 			if(user == null) {
@@ -180,6 +183,17 @@ public class MainModule extends CloudModule{
 				result.setMsg(Constants.NO_DATA_MSG);
 				renderJson(Json.toJson(result), Mvcs.getResp());
 				return;
+			}
+			
+			User mUser = userDao.getUserByMobile(newUser.getMobile());
+			
+			if(!mUser.getUserKey().equals(user.getUserKey())) {
+				if(mUser.getMobile().equals(newUser.getPassword())) {
+					result.setErrorCode(Constants.DUPLICATE_CODE);
+					result.setMsg(Constants.DUPLICATE_USER);
+					renderJson(Json.toJson(result), Mvcs.getResp());
+					return;
+				}
 			}
 			
 			if(newUser.getName() != null)
@@ -216,50 +230,49 @@ public class MainModule extends CloudModule{
 	@At("/v1.0/user/?")
 	@DELETE
 	public void delete(String json) {
-		/*String mobile = req.getParameter("mobile");
-		String password = req.getParameter("password");*/
-		
-	/*	
 		Result result = new Result();
-		if(StringUtils.isEmpty(userKey) || StringUtils.isEmpty(password) || StringUtils.isEmpty(mobile)) {
+		try {
+			
+			User newUser = Json.fromJson(User.class, json);
+			
+			if(StringUtils.isEmpty(newUser.getUserKey()) || StringUtils.isEmpty(newUser.getPassword()) || StringUtils.isEmpty(newUser.getMobile())) {
+				result.setErrorCode(Constants.PARAM_ERROR);
+				result.setMsg(Constants.PARAM_MSG);
+				renderJson(Json.toJson(result), Mvcs.getResp());
+				return;
+			}
+			
+			User findUser = userDao.getUserByMobileAndPwd(newUser);
+			
+			if(findUser == null || !findUser.getUserKey().equals(newUser.getUserKey())) {
+				result.setErrorCode(Constants.NO_DATA);
+				result.setMsg(Constants.NO_DATA_MSG);
+				renderJson(json.toString(), Mvcs.getResp());
+				return;
+			}
+			
+			userDao.delete(findUser);
+			
+			result.setErrorCode(Constants.SUCCESS_CODE);
+			result.setMsg(Constants.SUCCESS);
+		} catch (Exception e) {
+			log.log(Level.SEVERE, "user delete data:" + json, e);
 			result.setErrorCode(Constants.PARAM_ERROR);
 			result.setMsg(Constants.PARAM_MSG);
-			renderJson(Json.toJson(result), Mvcs.getResp());
-			return;
 		}
-		
-		User user = new User();
-		user.setMobile(mobile);
-		user.setPassword(password);
-		
-		User findUser = userDao.getUserByMobileAndPwd(user);
-		
-		JSONObject json = new JSONObject();
-
-		if(findUser == null || !findUser.getUserKey().equals(userKey)) {
-			json.put("errorCode", Constants.NO_DATA);
-			json.put("msg", Constants.NO_DATA_MSG);
-			renderJson(json.toString(), Mvcs.getResp());
-			return;
-		}
-		
-		userDao.delete(findUser);
-		
-		result.setErrorCode(Constants.SUCCESS_CODE);
-		result.setMsg(Constants.SUCCESS);
 		
 		renderJson(Json.toJson(result), Mvcs.getResp());
-		return;*/
 	}
 	
 	@At("/v1.0/user/bind")
+	@POST
 	public void bind() {
 		HttpServletRequest req = Mvcs.getReq();
 		String userKey = req.getParameter("userKey");
-		String deviceId = req.getParameter("deviceId");
+		String[] deviceIds = req.getParameterValues("deviceId");
 		
 		Result result = new Result();
-		if(StringUtils.isEmpty(userKey) || StringUtils.isEmpty(deviceId)) {
+		if(StringUtils.isEmpty(userKey) || deviceIds.length == 0) {
 			result.setErrorCode(Constants.PARAM_ERROR);
 			result.setMsg(Constants.PARAM_MSG);
 			renderJson(Json.toJson(result), Mvcs.getResp());
@@ -267,22 +280,64 @@ public class MainModule extends CloudModule{
 		}
 		
 		User user = userDao.getUserById(userKey);
-		Devices device = deviceDao.getById(Integer.parseInt(deviceId));
 		
-		if(user == null || device == null) {
+		if(user == null) {
 			result.setErrorCode(Constants.NO_DATA);
 			result.setMsg(Constants.NO_DATA_MSG);
 			renderJson(Json.toJson(result), Mvcs.getResp());
 			return;
 		}
 		
-		device.setUserId(user.getUserId());
-		deviceDao.update(device);
+		for(String deviceIdStr : deviceIds) {
+			Devices device = deviceDao.getById(Integer.parseInt(deviceIdStr));
+			
+			device.setUserKey(userKey);
+			deviceDao.update(device);
+		}
 		
 		result.setErrorCode(Constants.SUCCESS_CODE);
 		result.setMsg(Constants.SUCCESS);
 		
 		renderJson(Json.toJson(result), Mvcs.getResp());
-		return;
+	}
+	
+	@At("/v1.0/servicesList/?")
+	@POST
+	public void getServices(String userKey) {
+		Map<String,String> addr = new HashMap<String,String>();
+		
+		HttpServletRequest request = Mvcs.getReq();
+
+		String basePath = request.getScheme()+"://" +request.getServerName()+":"+request.getServerPort()+ request.getContextPath()+ "/";
+		basePath += "v1.0";
+		
+		addr.put("user", basePath + "/user/");
+		addr.put("bindUser", basePath + "/user/bind");
+		addr.put("login", basePath + "/user/login");
+		
+		addr.put("device", basePath + "/device/");
+		addr.put("bindDevice", basePath + "/device/bind");
+		
+		addr.put("sensor", basePath + "/sensor/");
+		addr.put("bindSensor", basePath + "/sensor/bind");
+		
+		renderJson(Json.toJson(addr), Mvcs.getResp());
+	}
+	
+	public static void main(String[] args) throws Exception {
+		User u = new User();
+		u.setUserKey("2c6429be-2de8-4d4d-abac-37d2ec57c461");
+		u.setMobile("zxcasds");
+		u.setPassword("tessssss");
+		System.out.println(new Gson().toJson(u));
+		
+		Devices d = new Devices();
+		d.setTitle("asd");
+		System.out.println(new Gson().toJson(d));
+		
+		Sensors s = new Sensors();
+		s.setTitle("zzzzzzzzzz");
+		System.out.println(new Gson().toJson(s));
+		
 	}
 }

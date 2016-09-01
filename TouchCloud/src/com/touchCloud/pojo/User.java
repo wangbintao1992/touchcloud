@@ -15,9 +15,6 @@ import org.nutz.dao.entity.annotation.Table;
  */
 @Table("t_user")
 public class User{
-	@Name
-	@Column("user_id")
-	private int userId;
 	@Column("name")
 	private String name;
 	@Column("password")
@@ -42,16 +39,6 @@ public class User{
 	
 	/*@Many(field = "userId", target = Devices.class)
 	private List<Devices> devices;*/
-
-	
-
-	public int getUserId() {
-		return userId;
-	}
-
-	public void setUserId(int userId) {
-		this.userId = userId;
-	}
 
 	public String getName() {
 		return name;

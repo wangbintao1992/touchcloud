@@ -1,8 +1,7 @@
 package com.touchCloud;
 
+import java.util.logging.Level;
 import java.util.logging.Logger;
-
-import javax.servlet.http.HttpServletRequest;
 
 import org.apache.commons.lang.StringUtils;
 import org.nutz.ioc.loader.annotation.Inject;
@@ -11,6 +10,7 @@ import org.nutz.json.Json;
 import org.nutz.mvc.Mvcs;
 import org.nutz.mvc.annotation.At;
 import org.nutz.mvc.annotation.DELETE;
+import org.nutz.mvc.annotation.GET;
 import org.nutz.mvc.annotation.POST;
 import org.nutz.mvc.annotation.PUT;
 
@@ -31,47 +31,38 @@ public class SensorModule extends CloudModule{
 	@Inject
 	private SensorsDao sensorsDao;
 	
-	@At("/v1.0/sensor")
+	@At("/v1.0/sensor/?")
 	@POST
-	public void save() {
-		HttpServletRequest req = Mvcs.getReq();
-		String title = req.getParameter("title");
-		String type = req.getParameter("type");
-		String about = req.getParameter("about");
-		
+	public void save(String json) {
 		Result result = new Result();
-		if(StringUtils.isEmpty(title) || StringUtils.isEmpty(type)) {
+		
+		try {
+			Sensors s = Json.fromJson(Sensors.class, json);
+			
+			if(s == null || StringUtils.isEmpty(s.getTitle())) {
+				result.setErrorCode(Constants.PARAM_ERROR);
+				result.setMsg(Constants.PARAM_MSG);
+				renderJson(Json.toJson(result), Mvcs.getResp());
+				return;
+			}
+			
+			sensorsDao.save(s);
+			
+			result.setErrorCode(Constants.SUCCESS_CODE);
+			result.setMsg(Constants.SUCCESS);
+		} catch (Exception e) {
+			log.log(Level.SEVERE, "save Sensor exception data :" + json, e);
 			result.setErrorCode(Constants.PARAM_ERROR);
 			result.setMsg(Constants.PARAM_MSG);
-			renderJson(Json.toJson(result), Mvcs.getResp());
-			return;
 		}
-		
-		Sensors sensor = new Sensors();
-		sensor.setAbout(about);
-		sensor.setTitle(title);
-		sensor.setType(Integer.parseInt(type));
-		
-		sensorsDao.save(sensor);
-		
-		result.setErrorCode(Constants.SUCCESS_CODE);
-		result.setMsg(Constants.SUCCESS);
 		
 		renderJson(Json.toJson(result), Mvcs.getResp());
 	}
 	
 	@At("/v1.0/sensor/?")
-	@POST
+	@GET
 	public void getById(int sensorId) {
-		Object data = null;
-		if(sensorId == 0) {
-			
-			data = sensorsDao.getAllSensors();
-		}
-		else {
-			
-			data = sensorsDao.getById(sensorId);
-		}
+		Sensors data = sensorsDao.getById(sensorId);
 		
 		if(data != null) {
 			renderJson(Json.toJson(data), Mvcs.getResp());
@@ -85,41 +76,51 @@ public class SensorModule extends CloudModule{
 		return;
 	}
 	
+	@At("/v1.0/sensor")
+	@GET
+	public void getAll() {
+		renderJson(Json.toJson(sensorsDao.getAllSensors()), Mvcs.getResp());
+	}
+	
 	@At("/v1.0/sensor/?")
 	@PUT
-	public void update(int sensorId) {
-		HttpServletRequest req = Mvcs.getReq();
-		String title = req.getParameter("title");
-		String type = req.getParameter("type");
-		String about = req.getParameter("about");
-		
+	public void update(String json) {
 		Result result = new Result();
-		if(StringUtils.isEmpty(title) || StringUtils.isEmpty(type)) {
+		
+		try {
+			Sensors s = Json.fromJson(Sensors.class, json);
+			
+			if(StringUtils.isEmpty(s.getTitle())) {
+				result.setErrorCode(Constants.PARAM_ERROR);
+				result.setMsg(Constants.PARAM_MSG);
+				renderJson(Json.toJson(result), Mvcs.getResp());
+				return;
+			}
+			
+			Sensors sensors = sensorsDao.getById(s.getSensorId());
+			
+			if(sensors == null) {
+				result.setErrorCode(Constants.NO_DATA);
+				result.setMsg(Constants.NO_DATA_MSG);
+				renderJson(Json.toJson(result), Mvcs.getResp());
+				return;
+			}
+			
+			sensors.setTitle(s.getTitle());
+			sensors.setType(s.getType());
+			
+			if(s.getAbout() != null)
+				sensors.setAbout(s.getAbout());
+			
+			sensorsDao.update(sensors);
+			
+			result.setErrorCode(Constants.SUCCESS_CODE);
+			result.setMsg(Constants.SUCCESS);
+		} catch (Exception e) {
+			log.log(Level.SEVERE, "update Sensor exception data :" + json, e);
 			result.setErrorCode(Constants.PARAM_ERROR);
 			result.setMsg(Constants.PARAM_MSG);
-			renderJson(Json.toJson(result), Mvcs.getResp());
-			return;
 		}
-		
-		Sensors sensors = sensorsDao.getById(sensorId);
-		
-		if(sensors == null) {
-			result.setErrorCode(Constants.NO_DATA);
-			result.setMsg(Constants.NO_DATA_MSG);
-			renderJson(Json.toJson(result), Mvcs.getResp());
-			return;
-		}
-		
-		sensors.setTitle(title);
-		sensors.setType(Integer.parseInt(type));
-		
-		if(about != null)
-			sensors.setAbout(about);
-		
-		sensorsDao.update(sensors);
-		
-		result.setErrorCode(Constants.SUCCESS_CODE);
-		result.setMsg(Constants.SUCCESS);
 		
 		renderJson(Json.toJson(result), Mvcs.getResp());
 	}
@@ -145,6 +146,5 @@ public class SensorModule extends CloudModule{
 		result.setMsg(Constants.SUCCESS);
 		
 		renderJson(Json.toJson(result), Mvcs.getResp());
-		return;
 	}
 }

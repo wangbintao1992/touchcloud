@@ -55,4 +55,14 @@ public class UserDao {
 		
 		return false;
 	}
+	
+	public User getUserByMobile(String mobile) {
+		List<User> query = dao.query(User.class, Cnd.where("mobile", " = ", mobile));
+		
+		if(query != null && query.size() > 0) {
+			return query.get(0);
+		}
+		
+		return null;
+	}
 }

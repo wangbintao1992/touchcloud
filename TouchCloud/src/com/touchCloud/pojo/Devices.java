@@ -25,8 +25,8 @@ public class Devices {
 	private double lat;
 	@Column("lng")
 	private double lng;
-	@Column("user_id") 
-	private int userId;
+	@Column("user_key") 
+	private String userKey;
 	
 	/*@Many(field = "sensorId", target = Sensors.class)
 	private List<Sensors> sersors;*/
@@ -71,12 +71,12 @@ public class Devices {
 		this.lng = lng;
 	}
 
-	public int getUserId() {
-		return userId;
+	public String getUserKey() {
+		return userKey;
 	}
 
-	public void setUserId(int userId) {
-		this.userId = userId;
+	public void setUserKey(String userKey) {
+		this.userKey = userKey;
 	}
 
 	/*public List<Sensors> getSersors() {
