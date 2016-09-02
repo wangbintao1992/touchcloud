@@ -16,6 +16,20 @@ CREATE DATABASE /*!32312 IF NOT EXISTS*/`touchcloud` /*!40100 DEFAULT CHARACTER 
 
 USE `touchcloud`;
 
+/*Table structure for table `a` */
+
+DROP TABLE IF EXISTS `a`;
+
+CREATE TABLE `a` (
+  `id` int(11) NOT NULL AUTO_INCREMENT,
+  `name` varchar(11) DEFAULT NULL,
+  PRIMARY KEY (`id`)
+) ENGINE=InnoDB AUTO_INCREMENT=19 DEFAULT CHARSET=utf8;
+
+/*Data for the table `a` */
+
+insert  into `a`(`id`,`name`) values (1,'1'),(2,'2'),(3,'3'),(4,'4'),(5,'5'),(6,'6'),(7,'7'),(8,'8'),(9,'9'),(10,'10'),(11,'11'),(12,'12'),(13,'13'),(14,'14'),(15,'15'),(16,'16'),(17,'17'),(18,'18');
+
 /*Table structure for table `t_data_point` */
 
 DROP TABLE IF EXISTS `t_data_point`;
@@ -23,14 +37,15 @@ DROP TABLE IF EXISTS `t_data_point`;
 CREATE TABLE `t_data_point` (
   `id` int(11) NOT NULL AUTO_INCREMENT,
   `timestamp` datetime DEFAULT NULL,
-  `type` varchar(1) DEFAULT NULL,
-  `lat` double DEFAULT NULL,
-  `lng` double DEFAULT NULL,
-  `speed` double DEFAULT NULL,
+  `value` varchar(200) DEFAULT NULL,
+  `device_id` int(11) NOT NULL,
+  `sensor_id` int(11) NOT NULL,
   PRIMARY KEY (`id`)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8;
+) ENGINE=InnoDB AUTO_INCREMENT=12 DEFAULT CHARSET=utf8;
 
 /*Data for the table `t_data_point` */
+
+insert  into `t_data_point`(`id`,`timestamp`,`value`,`device_id`,`sensor_id`) values (1,'2016-09-01 14:48:09','1',1,1),(2,'2016-09-28 14:48:18','1',1,1),(3,'2016-09-13 14:48:23','1',3,3),(4,'2016-08-31 14:48:27','1',1,1),(5,'2016-09-14 14:48:31','1',2,2),(6,'2016-09-04 14:48:35','1',1,1),(7,'2016-09-26 14:48:38','1',3,3),(8,'2016-09-07 14:48:42','1',1,1),(9,'2016-09-14 14:48:46','1',1,1),(10,'2016-09-15 14:48:50','1',1,1),(11,'2016-09-06 14:48:53','1',3,3);
 
 /*Table structure for table `t_devices` */
 
