@@ -13,14 +13,12 @@ public class DataPoint {
 	private int id;
 	@Column("timestamp")
 	private Date timestamp;
-	@Column("type")
-	private String type;
-	@Column("lat")
-	private double lat;
-	@Column("lng")
-	private double lng;
-	@Column("speed")
-	private double speed;
+	@Column("value")
+	private String value;
+	@Column("device_id")
+	private int deviceId;
+	@Column("sensor_id")
+	private int sensorId;
 	
 	public int getId() {
 		return id;
@@ -34,28 +32,24 @@ public class DataPoint {
 	public void setTimestamp(Date timestamp) {
 		this.timestamp = timestamp;
 	}
-	public String getType() {
-		return type;
+	public String getValue() {
+		return value;
 	}
-	public void setType(String type) {
-		this.type = type;
+	public void setValue(String value) {
+		this.value = value;
 	}
-	public double getLat() {
-		return lat;
+	public int getDeviceId() {
+		return deviceId;
 	}
-	public void setLat(double lat) {
-		this.lat = lat;
+	public void setDeviceId(int deviceId) {
+		this.deviceId = deviceId;
 	}
-	public double getLng() {
-		return lng;
+	public int getSensorId() {
+		return sensorId;
 	}
-	public void setLng(double lng) {
-		this.lng = lng;
+	public void setSensorId(int sensorId) {
+		this.sensorId = sensorId;
 	}
-	public double getSpeed() {
-		return speed;
-	}
-	public void setSpeed(double speed) {
-		this.speed = speed;
-	}
+	
+	
 }

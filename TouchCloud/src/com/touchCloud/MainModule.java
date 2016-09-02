@@ -2,7 +2,6 @@ package com.touchCloud;
 
 import java.util.Date;
 import java.util.HashMap;
-import java.util.List;
 import java.util.Map;
 import java.util.UUID;
 import java.util.logging.Level;
@@ -16,7 +15,6 @@ import org.apache.commons.lang.StringUtils;
 import org.nutz.ioc.loader.annotation.Inject;
 import org.nutz.ioc.loader.annotation.IocBean;
 import org.nutz.json.Json;
-import org.nutz.json.JsonException;
 import org.nutz.mvc.Mvcs;
 import org.nutz.mvc.annotation.At;
 import org.nutz.mvc.annotation.DELETE;
@@ -301,9 +299,9 @@ public class MainModule extends CloudModule{
 		renderJson(Json.toJson(result), Mvcs.getResp());
 	}
 	
-	@At("/v1.0/servicesList/?")
+	@At("/v1.0/servicesList")
 	@POST
-	public void getServices(String userKey) {
+	public void getServices() {
 		Map<String,String> addr = new HashMap<String,String>();
 		
 		HttpServletRequest request = Mvcs.getReq();
