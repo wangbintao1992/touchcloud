@@ -11,17 +11,20 @@ import org.nutz.ioc.loader.annotation.IocBean;
 import org.nutz.json.Json;
 import org.nutz.json.JsonException;
 import org.nutz.mvc.Mvcs;
+import org.nutz.mvc.adaptor.PairAdaptor;
+import org.nutz.mvc.annotation.AdaptBy;
 import org.nutz.mvc.annotation.At;
 import org.nutz.mvc.annotation.DELETE;
 import org.nutz.mvc.annotation.GET;
 import org.nutz.mvc.annotation.POST;
 import org.nutz.mvc.annotation.PUT;
+import org.nutz.mvc.annotation.Param;
 
 import com.touchCloud.dao.DevicesDao;
 import com.touchCloud.dao.SensorsDao;
+import com.touchCloud.dao.UserDao;
 import com.touchCloud.pojo.Devices;
 import com.touchCloud.pojo.Sensors;
-import com.touchCloud.pojo.User;
 import com.touchCloud.vo.Constants;
 import com.touchCloud.vo.Result;
 
@@ -33,6 +36,9 @@ import com.touchCloud.vo.Result;
 public class DeviceModule extends CloudModule{
 	
 	@Inject
+	private UserDao userDao;
+	
+	@Inject
 	private DevicesDao devicesDao;
 	
 	@Inject
@@ -40,27 +46,44 @@ public class DeviceModule extends CloudModule{
 	
 	Logger log = Logger.getLogger(DeviceModule.class.getName());
 	
-	@At("/v1.0/device/?")
-	@POST
-	public void save(String json) {
+	@At("/v1.0/device/create")
+	@AdaptBy(type=PairAdaptor.class)
+	public void save(@Param("title") String title) {
 		Result result = new Result();
+		HttpServletRequest req = Mvcs.getReq();
 		
+		String about = req.getParameter("about");
+		String lat = req.getParameter("lat");
+		String lng = req.getParameter("lng");
+		String userKey = req.getParameter("userKey");
 		try {
-			Devices d = Json.fromJson(Devices.class, json);
 			
-			if(StringUtils.isEmpty(d.getTitle())) {
+			if(StringUtils.isEmpty(title)) {
 				result.setErrorCode(Constants.PARAM_ERROR);
 				result.setMsg(Constants.PARAM_MSG);
 				renderJson(Json.toJson(result), Mvcs.getResp());
 				return;
 			}
 			
+			if(userDao.getUserById(userKey) == null) {
+				result.setErrorCode(Constants.NO_DATA);
+				result.setMsg(Constants.NO_DATA_MSG);
+				renderJson(Json.toJson(result), Mvcs.getResp());
+				return;
+			}
+			
+			Devices d = new Devices();
+			d.setAbout(about);
+			d.setUserKey(userKey);
+			d.setTitle(title);
+			d.setLat(lat == null ? 0.0 : Double.parseDouble(lat));
+			d.setLng(lng == null ? 0.0 : Double.parseDouble(lng));
 			devicesDao.save(d);
 			
-			result.setErrorCode(Constants.SUCCESS_CODE);
-			result.setMsg(Constants.SUCCESS);
+			renderJson(d.getDeviceId() + "", Mvcs.getResp());
+			return;
 		} catch (JsonException e) {
-			log.log(Level.SEVERE, "save device exception data :" + json, e);
+			log.log(Level.SEVERE, "save device exception data :", e);
 			result.setErrorCode(Constants.PARAM_ERROR);
 			result.setMsg(Constants.PARAM_MSG);
 		}
@@ -68,8 +91,8 @@ public class DeviceModule extends CloudModule{
 		renderJson(Json.toJson(result), Mvcs.getResp());
 	}
 	
-	@At("/v1.0/device/?")
-	@GET
+	@At("/v1.0/device/check")
+	@AdaptBy(type=PairAdaptor.class)
 	public void getById(int deviceId) {
 		Devices d = devicesDao.getById(deviceId);
 		
@@ -85,27 +108,38 @@ public class DeviceModule extends CloudModule{
 		return;
 	}
 	
-	@At("/v1.0/device")
-	@GET
-	public void getAllDevice() {
-		renderJson(Json.toJson(devicesDao.getAllDevices()), Mvcs.getResp());
+	@At("/v1.0/device/enumerate")
+	public void getAllDevice(@Param("userKey") String userKey) {
+		Result result = new Result();
+		if(StringUtils.isEmpty(userKey)) {
+			result.setErrorCode(Constants.PARAM_ERROR);
+			result.setMsg(Constants.PARAM_MSG);
+			renderJson(Json.toJson(result), Mvcs.getResp());
+			return;
+		}
+		
+		renderJson(Json.toJson(devicesDao.getDevicesByUserKey(userKey)), Mvcs.getResp());
 	}
 	
-	@At("/v1.0/device/?")
-	@PUT
-	public void update(String json) {
+	@At("/v1.0/device/modify")
+	@AdaptBy(type=PairAdaptor.class)
+	public void update(@Param("title") String title,@Param("deviceId") int deviceId, @Param("userKey") String userKey) {
 		Result result = new Result();
+		HttpServletRequest req = Mvcs.getReq();
+		
+		String about = req.getParameter("about");
+		String lat = req.getParameter("lat");
+		String lng = req.getParameter("lng");
+		String newUserKey = req.getParameter("newUserKey");
 		try {
-			Devices d = Json.fromJson(Devices.class, json);
-			
-			if(StringUtils.isEmpty(d.getTitle()) || d.getDeviceId() == 0) {
+			if(deviceId == 0 || StringUtils.isEmpty(userKey)) {
 				result.setErrorCode(Constants.PARAM_ERROR);
 				result.setMsg(Constants.PARAM_MSG);
 				renderJson(Json.toJson(result), Mvcs.getResp());
 				return;
 			}
 			
-			Devices device = devicesDao.getById(d.getDeviceId());
+			Devices device = devicesDao.getById(deviceId);
 			
 			if(device == null) {
 				result.setErrorCode(Constants.NO_DATA);
@@ -114,21 +148,28 @@ public class DeviceModule extends CloudModule{
 				return;
 			}
 			
-			device.setTitle(d.getTitle());
+			device.setTitle(title);
+			device.setAbout(about);
+			device.setLat(lat == null ? 0.0 : Double.parseDouble(lat));
+			device.setLng(lng == null ? 0.0 : Double.parseDouble(lng));
 			
-			if(d.getAbout() != null)
-				device.setAbout(d.getAbout());
-			if(d.getLat() != 0.0)
-				device.setLat(d.getLat());
-			if(d.getLng() != 0.0) 
-				device.setLng(d.getLng());
+			if(StringUtils.isNotEmpty(newUserKey)) {
+				
+				if(userDao.getUserById(newUserKey) == null) {
+					result.setErrorCode(Constants.PARAM_ERROR);
+					result.setMsg(Constants.PARAM_MSG);
+					return;
+				}
+				
+				device.setUserKey(newUserKey);
+			}
 			
 			devicesDao.update(device);
 			
 			result.setErrorCode(Constants.SUCCESS_CODE);
 			result.setMsg(Constants.SUCCESS);
 		} catch (Exception e) {
-			log.log(Level.SEVERE, "update device exception data :" + json, e);
+			log.log(Level.SEVERE, "update device exception data :", e);
 			result.setErrorCode(Constants.PARAM_ERROR);
 			result.setMsg(Constants.PARAM_MSG);
 		}
@@ -136,32 +177,36 @@ public class DeviceModule extends CloudModule{
 		renderJson(Json.toJson(result), Mvcs.getResp());
 	}
 	
-	@At("/v1.0/device/?")
-	@DELETE
-	public void delete(int deviceId) {
+	@At("/v1.0/device/delete")
+	@AdaptBy(type=PairAdaptor.class)
+	public void delete(@Param("deviceId") int deviceId, @Param("userKey") String userkey) {
 
 		Result result = new Result();
-		if(deviceId == 0) {
+		if(deviceId == 0 || StringUtils.isEmpty(userkey)) {
 			result.setErrorCode(Constants.PARAM_ERROR);
 			result.setMsg(Constants.PARAM_MSG);
 			renderJson(Json.toJson(result), Mvcs.getResp());
 			return;
 		}
 		
-		Devices device = new Devices();
-		device.setDeviceId(deviceId);
+		Devices d = devicesDao.getById(deviceId);
 		
-		//digui
-		devicesDao.delete(device);
+		if(d == null) {
+			result.setErrorCode(Constants.NO_DATA);
+			result.setMsg(Constants.NO_DATA_MSG);
+			renderJson(Json.toJson(result), Mvcs.getResp());
+			return;
+		}
+		
+		devicesDao.delete(d);
 		
 		result.setErrorCode(Constants.SUCCESS_CODE);
 		result.setMsg(Constants.SUCCESS);
 		
-		renderJson(Json.toJson(result), Mvcs.getResp());
+		renderJson(d.getUserKey(), Mvcs.getResp());
 	}
 	
 	@At("/v1.0/device/bind")
-	@POST
 	public void bind() {
 		HttpServletRequest req = Mvcs.getReq();
 		String[] sensorIds = req.getParameterValues("sensorId");

@@ -1,6 +1,7 @@
 package com.touchCloud;
 
 
+import java.util.Date;
 import java.util.List;
 
 import javax.servlet.http.HttpServletRequest;
@@ -10,15 +11,17 @@ import org.nutz.ioc.loader.annotation.Inject;
 import org.nutz.ioc.loader.annotation.IocBean;
 import org.nutz.json.Json;
 import org.nutz.mvc.Mvcs;
+import org.nutz.mvc.adaptor.PairAdaptor;
+import org.nutz.mvc.annotation.AdaptBy;
 import org.nutz.mvc.annotation.At;
-import org.nutz.mvc.annotation.DELETE;
-import org.nutz.mvc.annotation.GET;
-import org.nutz.mvc.annotation.POST;
-import org.nutz.mvc.annotation.PUT;
+import org.nutz.mvc.annotation.Param;
 
 import com.touchCloud.dao.DataPointDao;
+import com.touchCloud.dao.DevicesDao;
+import com.touchCloud.dao.SensorsDao;
 import com.touchCloud.pojo.DataPoint;
 import com.touchCloud.pojo.Page;
+import com.touchCloud.pojo.Sensors;
 import com.touchCloud.vo.Constants;
 import com.touchCloud.vo.Result;
 
@@ -26,10 +29,16 @@ import com.touchCloud.vo.Result;
 public class DatapointModule extends CloudModule{
 	
 	@Inject
+	private DevicesDao deviceDao;
+	
+	@Inject
+	private SensorsDao sensorsDao;
+	
+	@Inject
 	private DataPointDao dpDao;
 	
-	@At("/v1.0/dataPoint/?")
-	@PUT
+	@At("/v1.0/dataPoint/modify")
+	@AdaptBy(type=PairAdaptor.class)
 	public void update(String json) {
 		Result result = new Result();
 		
@@ -63,19 +72,37 @@ public class DatapointModule extends CloudModule{
 		renderJson(Json.toJson(result), Mvcs.getResp());
 	}
 	
-	@At("/v1.0/dataPoint/?")
-	@POST
-	public void save(String json) {
+	@At("/v1.0/dataPoint/create")
+	@AdaptBy(type=PairAdaptor.class)
+	public void save(@Param("sensorId") int sensorId, @Param("timestamp") Date timestamp,@Param("type") String type,
+			@Param("value") String value) {
 		Result result = new Result();
 		
 		try {
-			DataPoint dp = Json.fromJson(DataPoint.class, json);
-			if(dp == null || dp.getDeviceId() == 0 || dp.getSensorId() == 0) {
+			if(timestamp == null || sensorId == 0 || checkIsEmpty(type,value)) {
 				result.setErrorCode(Constants.PARAM_ERROR);
 				result.setMsg(Constants.PARAM_MSG);
 				renderJson(Json.toJson(result), Mvcs.getResp());
 				return;
 			}
+			
+			Sensors s = sensorsDao.getById(sensorId);
+			
+			if(s == null) {
+				result.setErrorCode(Constants.NO_DATA);
+				result.setMsg(Constants.NO_DATA_MSG);
+				renderJson(Json.toJson(result), Mvcs.getResp());
+				return;
+			}
+			
+			//@wang data dulipcate
+			DataPoint dp = new DataPoint();
+			dp.setSensorId(sensorId);
+			dp.setTimestamp(timestamp);
+			dp.setValue(value);
+			dp.setType(type);
+			dp.setDeviceId(s.getDeviceId());
+			dp.setSensorId(sensorId);
 			
 			dpDao.save(dp);
 			
@@ -90,9 +117,9 @@ public class DatapointModule extends CloudModule{
 		renderJson(Json.toJson(result), Mvcs.getResp());
 	}
 	
-	@At("/v1.0/dataPoint/?")
-	@GET
-	public void getById(int id) {
+	@At("/v1.0/dataPoint/check")
+	@AdaptBy(type=PairAdaptor.class)
+	public void getById(@Param("dataPointId") int id) {
 		DataPoint dp = dpDao.getById(id);
 		
 		Result result = new Result();
@@ -107,13 +134,13 @@ public class DatapointModule extends CloudModule{
 		renderJson(Json.toJson(dp), Mvcs.getResp());
 	}
 	
-	@At("/v1.0/delete/?")
-	@DELETE
-	public void delete(int dpId){
+	@At("/v1.0/dataPoint/delete")
+	@AdaptBy(type=PairAdaptor.class)
+	public void delete(@Param("dataPointId") int id){
 		Result result = new Result();
 		try {
 			
-			DataPoint dp = dpDao.getById(dpId);
+			DataPoint dp = dpDao.getById(id);
 			
 			if(dp == null) {
 				result.setErrorCode(Constants.NO_DATA);

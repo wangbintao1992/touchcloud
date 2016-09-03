@@ -15,6 +15,8 @@ public class DataPoint {
 	private Date timestamp;
 	@Column("value")
 	private String value;
+	@Column("type")
+	private String type;
 	@Column("device_id")
 	private int deviceId;
 	@Column("sensor_id")
@@ -50,6 +52,10 @@ public class DataPoint {
 	public void setSensorId(int sensorId) {
 		this.sensorId = sensorId;
 	}
-	
-	
+	public String getType() {
+		return type;
+	}
+	public void setType(String type) {
+		this.type = type;
+	}
 }

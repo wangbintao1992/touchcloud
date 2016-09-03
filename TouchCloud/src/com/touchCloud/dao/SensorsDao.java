@@ -19,6 +19,10 @@ public class SensorsDao {
 		return dao.fetch(Sensors.class, sensorsId);
 	}
 	
+	public List<Sensors> getSensorByDeviceId(int deviceId) {
+		return dao.query(Sensors.class, Cnd.where("deviceId","=",deviceId));
+	}
+	
 	public List<Sensors> getAllSensors() {
 		return dao.query(Sensors.class, Cnd.where("1","=","1"));
 	}
