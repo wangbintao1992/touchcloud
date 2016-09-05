@@ -20,6 +20,7 @@ import org.nutz.mvc.annotation.Param;
 import com.touchCloud.dao.DataPointDao;
 import com.touchCloud.dao.DevicesDao;
 import com.touchCloud.dao.SensorsDao;
+import com.touchCloud.dao.UserDao;
 import com.touchCloud.pojo.DataPoint;
 import com.touchCloud.pojo.Page;
 import com.touchCloud.pojo.Sensors;
@@ -37,6 +38,9 @@ public class DatapointModule extends CloudModule{
 	
 	@Inject
 	private DataPointDao dpDao;
+	
+	@Inject
+	private UserDao userDao;
 	
 	@At("/v1.0/dataPoint/modify")
 	@AdaptBy(type=PairAdaptor.class)
