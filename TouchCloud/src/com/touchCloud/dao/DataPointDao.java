@@ -16,7 +16,6 @@ import org.nutz.ioc.loader.annotation.IocBean;
 import com.touchCloud.pojo.DataPoint;
 import com.touchCloud.pojo.Page;
 
-import javafx.scene.chart.PieChart.Data;
 @IocBean
 public class DataPointDao {
 	

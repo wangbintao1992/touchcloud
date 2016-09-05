@@ -6,6 +6,7 @@ import java.util.List;
 
 import javax.servlet.http.HttpServletRequest;
 
+import org.apache.commons.lang.ArrayUtils;
 import org.apache.commons.lang.StringUtils;
 import org.nutz.ioc.loader.annotation.Inject;
 import org.nutz.ioc.loader.annotation.IocBean;
@@ -39,25 +40,33 @@ public class DatapointModule extends CloudModule{
 	
 	@At("/v1.0/dataPoint/modify")
 	@AdaptBy(type=PairAdaptor.class)
-	public void update(String json) {
+	public void update(@Param("sensorId") int sensorId, @Param("timestamp") Date timestamp,@Param("type") String type,
+			@Param("value") String value,@Param("dataPointId") int dataPointId) {
 		Result result = new Result();
 		
 		try {
-			DataPoint dp = Json.fromJson(DataPoint.class, json);
-			if(dp == null || dp.getId() == 0 || dp.getDeviceId() == 0 || dp.getSensorId() == 0) {
+			if(dataPointId == 0 || timestamp == null || sensorId == 0 || checkIsEmpty(type,value) || !ArrayUtils.contains(new int[]{1,2},Integer.parseInt(type))) {
 				result.setErrorCode(Constants.PARAM_ERROR);
 				result.setMsg(Constants.PARAM_MSG);
 				renderJson(Json.toJson(result), Mvcs.getResp());
 				return;
 			}
 			
-			DataPoint fdp = dpDao.getById(dp.getId());
+			DataPoint fdp = dpDao.getById(dataPointId);
 			
 			if(fdp == null) {
 				result.setErrorCode(Constants.NO_DATA);
 				result.setMsg(Constants.NO_DATA_MSG);
 				renderJson(Json.toJson(result), Mvcs.getResp());
 				return;
+			}
+			
+			if(timestamp != null)
+				fdp.setTimestamp(timestamp);
+			if(value != null)
+				fdp.setValue(value);
+			if(StringUtils.isNotEmpty(type)) {
+				fdp.setType(type);
 			}
 			
 			dpDao.update(fdp);
@@ -95,7 +104,7 @@ public class DatapointModule extends CloudModule{
 				return;
 			}
 			
-			//@wang data dulipcate
+			//@wang date dulipcate
 			DataPoint dp = new DataPoint();
 			dp.setSensorId(sensorId);
 			dp.setTimestamp(timestamp);
@@ -171,7 +180,7 @@ public class DatapointModule extends CloudModule{
 		String start = req.getParameter("start");
 		String end = req.getParameter("end");
 		String interval = req.getParameter("interval");
-		String pageNo = req.getParameter("pageNo");
+		String pageNo = req.getParameter("page");
 		
 		Result result = new Result();
 		
