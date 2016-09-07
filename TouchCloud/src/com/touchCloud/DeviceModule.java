@@ -1,5 +1,7 @@
 package com.touchCloud;
 
+import java.util.ArrayList;
+import java.util.List;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
@@ -14,16 +16,13 @@ import org.nutz.mvc.Mvcs;
 import org.nutz.mvc.adaptor.PairAdaptor;
 import org.nutz.mvc.annotation.AdaptBy;
 import org.nutz.mvc.annotation.At;
-import org.nutz.mvc.annotation.DELETE;
-import org.nutz.mvc.annotation.GET;
-import org.nutz.mvc.annotation.POST;
-import org.nutz.mvc.annotation.PUT;
 import org.nutz.mvc.annotation.Param;
 
 import com.touchCloud.dao.DevicesDao;
 import com.touchCloud.dao.SensorsDao;
 import com.touchCloud.dao.UserDao;
 import com.touchCloud.pojo.Devices;
+import com.touchCloud.pojo.HeatMapVo;
 import com.touchCloud.pojo.Sensors;
 import com.touchCloud.vo.Constants;
 import com.touchCloud.vo.Result;
@@ -35,7 +34,6 @@ import com.touchCloud.vo.Result;
 @IocBean
 public class DeviceModule extends CloudModule{
 	
-	@Inject
 	private UserDao userDao;
 	
 	@Inject
@@ -240,5 +238,31 @@ public class DeviceModule extends CloudModule{
 		result.setMsg(Constants.SUCCESS);
 		
 		renderJson(Json.toJson(result), Mvcs.getResp());
+	}
+	
+	@At("/v1.0/device/heatMap")
+	public void getHeadtMap(@Param("userKey") String userKey) {
+		Result result = new Result();
+		if(StringUtils.isEmpty(userKey)) {
+			result.setErrorCode(Constants.PARAM_ERROR);
+			result.setMsg(Constants.PARAM_MSG);
+			renderJson(Json.toJson(result), Mvcs.getResp());
+			return;
+		}
+		
+		List<Devices> data = devicesDao.getDevicesByUserKey(userKey);
+		
+		List<HeatMapVo> map = new ArrayList<HeatMapVo>();
+		
+		for(Devices d : data) {
+			HeatMapVo heatMap = new HeatMapVo();
+			heatMap.setLat(d.getLat());
+			heatMap.setLng(d.getLng());
+			heatMap.setCount(50);
+		
+			map.add(heatMap);
+		}
+		
+		renderJson(Json.toJson(map), Mvcs.getResp());
 	}
 }
