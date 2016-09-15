@@ -11,17 +11,11 @@ $(document).ready(function() {
 	    map.centerAndZoom(point, 15);             // 初始化地图，设置中心点坐标和地图级别
 	    map.enableScrollWheelZoom(); // 允许滚轮缩放
 	  	
-	    heatmapOverlay = new BMapLib.HeatmapOverlay({"radius":20});
-		heatmapOverlay.show();
-		map.addOverlay(heatmapOverlay);
-		
 		map.centerAndZoom(new BMap.Point(116.404, 39.915), 11);
 		var top_left_control = new BMap.ScaleControl({anchor: BMAP_ANCHOR_TOP_LEFT});// 左上角，添加比例尺
 		var top_left_navigation = new BMap.NavigationControl();  //左上角，添加默认缩放平移控件
-		var top_right_navigation = new BMap.NavigationControl({anchor: BMAP_ANCHOR_TOP_RIGHT, type: BMAP_NAVIGATION_CONTROL_SMALL}); //右上角
 		map.addControl(top_left_control);        
 		map.addControl(top_left_navigation);     
-		map.addControl(top_right_navigation);    
 		
 		  // 添加定位控件
 		  var geolocationControl = new BMap.GeolocationControl();
@@ -42,31 +36,41 @@ $(document).ready(function() {
 		  map.addControl(geolocationControl);
 		var userKey = $("#userKey").val();
 		
-		var points;
+		var points = null;
 		
-		$("#water").bind("click",function() {
-			$.get("/TouchCloud/v1.0/device/heatMap?userKey=" + userKey,function(data){
-				if(data == "") {
-					alert("no data");
-					return;
-				}
+		$("button[name='btn']").each(function(){
+			$(this).bind("click",function(){
+				map.clearOverlays();
 				
-				points =[
-				             {"lng":116.418261,"lat":39.921984,"count":50},
-				             {"lng":116.423332,"lat":39.916532,"count":51},
-				             {"lng":116.419787,"lat":39.930658,"count":15},
-				             {"lng":116.418455,"lat":39.920921,"count":40},
-				             {"lng":116.418843,"lat":39.915516,"count":100},
-				             {"lng":116.42546,"lat":39.918503,"count":6},
-				             {"lng":116.423289,"lat":39.919989,"count":18},
-				             {"lng":116.418162,"lat":39.915051,"count":80},
-				             {"lng":116.422039,"lat":39.91782,"count":11},
-				             {"lng":116.41387,"lat":39.917253,"count":7},
-				             {"lng":116.41773,"lat":39.919426,"count":42},
-				             {"lng":116.421107,"lat":39.916445,"count":4}];
-
-				points = data;
-				heatmapOverlay.setDataSet({data:points,max:100});
+				var type = $(this).val();
+				$.get("/TouchCloud/v1.0/device/heatMap?userKey=" + userKey + "&type=" + type,function(data){
+					if(data == "") {
+						alert("no data");
+						return;
+					}
+					
+					points = data;
+					heatmapOverlay = new BMapLib.HeatmapOverlay({"radius":20});
+					map.addOverlay(heatmapOverlay);
+					heatmapOverlay.setDataSet({data:points,max:100});
+					heatmapOverlay.show();
+				});
 			});
+		}); 
+		
+		$("#md").bind("click",function() {
+			map.clearOverlays();
+			
+			for(x in points) {
+				var marker = new BMap.Marker(new BMap.Point(points[x].lng, points[x].lat)); // 创建点
+				marker.id = points[x].deviceId;
+				marker.addEventListener("click",attribute);
+				map.addOverlay(marker);    //增加点
+			}
 		});
+		
+		function attribute(e){
+			var p = e.target;
+			window.open("/TouchCloud/detail.jsp?param=" + p.id);
+		}
 }); 

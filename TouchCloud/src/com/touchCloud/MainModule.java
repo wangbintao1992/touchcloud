@@ -1,5 +1,6 @@
 package com.touchCloud;
 
+import java.io.IOException;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.Map;
@@ -7,6 +8,7 @@ import java.util.UUID;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
+import javax.servlet.ServletException;
 import javax.servlet.http.HttpServletRequest;
 
 import org.apache.commons.lang.StringUtils;
@@ -111,7 +113,42 @@ public class MainModule extends CloudModule{
 		json.put("userkey", findUser.getUserKey());
 		renderJson(json.toString(), Mvcs.getResp());
 	}
-	
+	/*
+	 * 登录
+	 */
+	@At("/v1.0/user/loginWeb")
+	@AdaptBy(type=PairAdaptor.class)
+	public void loginWeb(@Param("mobile") String mobile, @Param("password") String pwd) {
+		try {
+			Result result = new Result();
+			if(StringUtils.isEmpty(mobile) && StringUtils.isEmpty(pwd)) {
+				result.setErrorCode(Constants.PARAM_ERROR);
+				result.setMsg(Constants.PARAM_MSG);
+				renderJson(Json.toJson(result), Mvcs.getResp());
+				return;
+			}
+			
+			User user = new User();
+			user.setMobile(mobile);
+			user.setPassword(pwd);
+			
+			User findUser = userDao.getUserByMobileAndPwd(user);
+			
+			HttpServletRequest req = Mvcs.getReq();
+
+			if(findUser == null) {
+				req.getRequestDispatcher("/login.jsp").forward(req, Mvcs.getResp());
+			}
+			else{
+				req.getSession().setAttribute("userKey", findUser.getUserKey());
+				req.getRequestDispatcher("/index.jsp").forward(req, Mvcs.getResp());
+			}
+		} catch (ServletException e) {
+			e.printStackTrace();
+		} catch (IOException e) {
+			e.printStackTrace();
+		}
+	}
 	/*
 	 * 新增
 	 */

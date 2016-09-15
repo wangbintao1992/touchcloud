@@ -5,8 +5,14 @@ public class HeatMapVo {
 	private double lng;
 	private double lat;
 	private int count;
+	private int deviceId;
 	
-	
+	public int getDeviceId() {
+		return deviceId;
+	}
+	public void setDeviceId(int deviceId) {
+		this.deviceId = deviceId;
+	}
 	public HeatMapVo() {
 		super();
 	}

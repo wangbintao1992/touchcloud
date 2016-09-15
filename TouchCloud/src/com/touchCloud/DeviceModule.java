@@ -54,9 +54,12 @@ public class DeviceModule extends CloudModule{
 		String lat = req.getParameter("lat");
 		String lng = req.getParameter("lng");
 		String userKey = req.getParameter("userKey");
+		String count = req.getParameter("count");
+		String type = req.getParameter("type");
+		String name = req.getParameter("name");
 		try {
 			
-			if(StringUtils.isEmpty(title)) {
+			if(StringUtils.isEmpty(title) || StringUtils.isEmpty(type) || StringUtils.isEmpty(count)) {
 				result.setErrorCode(Constants.PARAM_ERROR);
 				result.setMsg(Constants.PARAM_MSG);
 				renderJson(Json.toJson(result), Mvcs.getResp());
@@ -73,7 +76,10 @@ public class DeviceModule extends CloudModule{
 			Devices d = new Devices();
 			d.setAbout(about);
 			d.setUserKey(userKey);
+			d.setCount(Integer.parseInt(count));
+			d.setType(type);
 			d.setTitle(title);
+			d.setDeviceName(name);
 			d.setLat(lat == null ? 0.0 : Double.parseDouble(lat));
 			d.setLng(lng == null ? 0.0 : Double.parseDouble(lng));
 			devicesDao.save(d);
@@ -91,7 +97,7 @@ public class DeviceModule extends CloudModule{
 	
 	@At("/v1.0/device/check")
 	@AdaptBy(type=PairAdaptor.class)
-	public void getById(int deviceId) {
+	public void getById(@Param("deviceId")int deviceId) {
 		Devices d = devicesDao.getById(deviceId);
 		
 		if(d != null) {
@@ -241,16 +247,21 @@ public class DeviceModule extends CloudModule{
 	}
 	
 	@At("/v1.0/device/heatMap")
-	public void getHeadtMap(@Param("userKey") String userKey) {
+	public void getHeadtMap(@Param("userKey") String userKey,@Param("type")String type) {
 		Result result = new Result();
-		if(StringUtils.isEmpty(userKey)) {
+		if(StringUtils.isEmpty(userKey) || StringUtils.isEmpty(type)) {
 			result.setErrorCode(Constants.PARAM_ERROR);
 			result.setMsg(Constants.PARAM_MSG);
 			renderJson(Json.toJson(result), Mvcs.getResp());
 			return;
 		}
 		
-		List<Devices> data = devicesDao.getDevicesByUserKey(userKey);
+		List<Devices> data = null;
+		if("4".equals(type)) {
+			data = devicesDao.getDevicesByUserKey(userKey);
+		}else {
+			data = devicesDao.getDevicesByUserKeyAndType(userKey,type);
+		}
 		
 		List<HeatMapVo> map = new ArrayList<HeatMapVo>();
 		
@@ -258,8 +269,8 @@ public class DeviceModule extends CloudModule{
 			HeatMapVo heatMap = new HeatMapVo();
 			heatMap.setLat(d.getLat());
 			heatMap.setLng(d.getLng());
-			heatMap.setCount(50);
-		
+			heatMap.setCount(d.getCount());
+			heatMap.setDeviceId(d.getDeviceId());
 			map.add(heatMap);
 		}
 		

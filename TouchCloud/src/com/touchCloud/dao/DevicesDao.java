@@ -15,6 +15,10 @@ public class DevicesDao {
 	@Inject
 	private Dao dao;
 	
+	public List<Devices> getDevicesByUserKeyAndType(String userKey,String type) {
+		return dao.query(Devices.class, Cnd.where("userKey", " = ",userKey).and("type", "=",type));
+	}
+	
 	public List<Devices> getDevicesByUserKey(String userKey) {
 		return dao.query(Devices.class, Cnd.where("userKey", " = ",userKey));
 	}

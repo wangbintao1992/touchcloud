@@ -27,12 +27,42 @@ public class Devices {
 	private double lng;
 	@Column("user_key") 
 	private String userKey;
-	
+	@Column("type")
+	private String type;
+	@Column("count")
+	private int count;
+	@Column("name")
+	private String deviceName;
 	/*@Many(field = "sensorId", target = Sensors.class)
 	private List<Sensors> sersors;*/
-
+	
+	
 	public int getDeviceId() {
 		return deviceId;
+	}
+
+	public String getDeviceName() {
+		return deviceName;
+	}
+
+	public void setDeviceName(String deviceName) {
+		this.deviceName = deviceName;
+	}
+
+	public String getType() {
+		return type;
+	}
+
+	public void setType(String type) {
+		this.type = type;
+	}
+
+	public int getCount() {
+		return count;
+	}
+
+	public void setCount(int count) {
+		this.count = count;
 	}
 
 	public void setDeviceId(int deviceId) {
