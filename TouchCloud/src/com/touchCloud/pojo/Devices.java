@@ -33,12 +33,21 @@ public class Devices {
 	private int count;
 	@Column("name")
 	private String deviceName;
+	@Column("unit")
+	private String unit;
 	/*@Many(field = "sensorId", target = Sensors.class)
 	private List<Sensors> sersors;*/
 	
-	
 	public int getDeviceId() {
 		return deviceId;
+	}
+
+	public String getUnit() {
+		return unit;
+	}
+
+	public void setUnit(String unit) {
+		this.unit = unit;
 	}
 
 	public String getDeviceName() {

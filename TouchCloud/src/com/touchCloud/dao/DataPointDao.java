@@ -6,6 +6,7 @@ import java.sql.SQLException;
 import java.util.LinkedList;
 import java.util.List;
 
+import org.nutz.dao.Cnd;
 import org.nutz.dao.Dao;
 import org.nutz.dao.Sqls;
 import org.nutz.dao.sql.Sql;
@@ -21,6 +22,11 @@ public class DataPointDao {
 	
 	@Inject
 	private Dao dao;
+	
+	public DataPoint getData(int sensorId) {
+		List<DataPoint> query = dao.query(DataPoint.class, Cnd.where("deviceId", "=",sensorId),dao.createPager(1, 1));
+		return query.get(0);
+	}
 	
 	public DataPoint getById(int dpId) {
 		return dao.fetch(DataPoint.class, dpId);

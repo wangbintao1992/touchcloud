@@ -24,23 +24,22 @@ public class Sensors {
 	private String about;
 	@Column("device_id")
 	private int deviceId;
-	@Column("unit")
-	private String unit;
 	@Column("user_key")
 	private String userKey;
+	@Column("unit")
+	private String unit;
 	
-	
-	public String getUserKey() {
-		return userKey;
-	}
-	public void setUserKey(String userKey) {
-		this.userKey = userKey;
-	}
 	public String getUnit() {
 		return unit;
 	}
 	public void setUnit(String unit) {
 		this.unit = unit;
+	}
+	public String getUserKey() {
+		return userKey;
+	}
+	public void setUserKey(String userKey) {
+		this.userKey = userKey;
 	}
 	public int getDeviceId() {
 		return deviceId;

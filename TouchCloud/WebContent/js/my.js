@@ -1,7 +1,7 @@
 $(document).ready(function() {
 		var map = new BMap.Map("container");          // 创建地图实例
 		var mapType1 = new BMap.MapTypeControl({mapTypes: [BMAP_NORMAL_MAP,BMAP_HYBRID_MAP]});
-		var mapType2 = new BMap.MapTypeControl({anchor: BMAP_ANCHOR_BOTTOM_RIGHT});
+		var mapType2 = new BMap.MapTypeControl({anchor: BMAP_ANCHOR_TOP_RIGHT});
 		var overView = new BMap.OverviewMapControl();
 		map.addControl(mapType1);          //2D图，卫星图
 		map.addControl(mapType2);          //左上角，默认地图控件

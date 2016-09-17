@@ -23,6 +23,12 @@ public class UserDao {
 		dao.update(user);
 	}
 	
+	public User getUserByUserKey(String userKey) {
+		List<User> query = dao.query(User.class, Cnd.where("userKey", " = ", userKey));
+		
+		return query.get(0);
+	}
+	
 	public User getUserByMobileAndPwd(User user) {
 		Cnd cnd = Cnd.where("mobile", " = ", user.getMobile()).and("password", " = ", user.getPassword());
 		List<User> query = dao.query(User.class, cnd);

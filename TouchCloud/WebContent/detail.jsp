@@ -9,6 +9,10 @@
     <link rel="stylesheet" href="/TouchCloud/js/bootstrap.min.css">
 <title>Insert title here</title>
 <style type="text/css">
+*{
+	margin: 0;
+	padding: 0;
+}
 .b{
 
 }
@@ -41,10 +45,32 @@
 .sdetial{
 	border:1px white solid;
 	height: 146px;
+	text-align: center;
 }
 .d{
 	height:300px;
 	border: 1px #A6AAE1 solid;
+}
+.p1{
+	color: white;
+	font-size: 20px;
+	margin-top:10px;
+	margin-bottom: 0px;
+}
+.p2{
+	color: red;
+	font-size: 25px;
+	margin-bottom: 0px;
+}
+.p3{
+	color: white;
+	font-size: 20px;
+	margin-bottom: 0px;
+}
+.p4{
+	color: white;
+	font-size: 20px;
+	margin-bottom: 0px;
 }
 </style>
 </head>
@@ -57,7 +83,7 @@
 			<div class="col-md-7 b uinfo two">
 				<div class="col-md-12 ucontent b" id=""><span>Device name:</span><span id="d1"></span></div>
 				<div class="col-md-12 ucontent b" id=""><span>Device title:</span><span id="d2"></span></div>
-				<div class="col-md-12 ucontent b" id=""><span>User signature</span><span id="u1"></span></div>
+				<div class="col-md-12 ucontent b" id=""><span>User signature:</span><span id="u1"></span></div>
 			</div>
 			<div class="col-md-3 b three uinfo">
 				asdasd
@@ -69,23 +95,25 @@
 		<div class="row sensor">
 			<div class="col-md-12" id="sArr">
 				<div class="col-md-2 sdetial">
+				<p class="p1"><span>溶解氧</span></p>
+				<p class="p2"><span>asd</span></p>
+				<p class="p3"><span>mg/l</span></p>
+				<p class="p4"><span>2014/1/2/1</span></p>
 				</div>
 			</div>
 		</div>
-		<div class="row">
-			<button style="width: 100%;" class="btn btn-primary" id="add">增加传感器</button>
-			<button style="width: 100%;" class="btn btn-danger" id="sub">移除传感器</button>
 		</div>
 		<div class="row text1">
 			histort-data 历史数据区
 		</div>
 		<div class="row" id="dArr">
 			<dir class="d col-md-6" id="">
-			1
+			a
 			</dir>
 		</div>
 	</div>
 </body>
+<button id="t">asd</button>
 <script type="text/javascript">
 	var id = "${requestScope.id}";
 	var userKey = "${sessionScope.userKey}";
@@ -99,16 +127,39 @@
 			$("#u2").html(data.name);
 		});
 		
+		var device;
+		
 		$.get("/TouchCloud/v1.0/device/check?deviceId=" + id,function(data) {
 			if(data == "" || data.errorCode == "0001") {
 				window.location.href = "/TouchCloud/login.jsp";
 				return;
 			}
+			
+			device = data;
+			
 			$("#d1").html(data.deviceName);
 			$("#d2").html(data.title);
 		});
 		
-		$("#add").bind("click",function(){
+		var sids;
+		$.get("/TouchCloud/v1.0/sensor/getSensors?deviceId=" + id,function(data) {
+			sids = data;
+		});
+		
+		if(x in sids) {
+			var s = "s";
+			$("#sArr").append("<div class='col-md-2 sdetial' ><p class='p1'>" + 
+					"<span>溶解氧</span></p><p class='p2'><span>asd</span></p><p class='p3'>" + 
+					"<span>mg/l</span></p><p class='p4'><span>2014/1/2/1</span></p></div>");
+			
+		}
+		
+		setInterval(function(){
+			$.get("/TouchCloud/getData?sensorId=" + sids,function(data){
+				console.log(data);
+			});
+		}, 3000)
+		/*$("#add").bind("click",function(){
 			var arr = $("#sArr").children("div");
 			
 			if(arr.length == 6) {
@@ -127,7 +178,20 @@
 			}
 			arr[arr.length - 1].remove();
 			darr[darr.length - 1].remove();
-		});
+		});*/
+		
+		/*var ws = new WebSocket("ws://localhost:8080/TouchCloud/data"); 
+		 
+		ws.onopen = function(){
+			ws.send("asd");
+		}; 
+		 ws.onmessage = function(evt){
+			 console.log(evt.data);
+		}; 
+		
+		$("#t").bind("click",function(){
+			ws.send("asd");
+		});*/
 	});
 </script>
 </html>

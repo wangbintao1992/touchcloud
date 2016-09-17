@@ -1,5 +1,6 @@
 package com.touchCloud;
 
+import java.util.List;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
@@ -46,7 +47,6 @@ public class SensorModule extends CloudModule{
 		Result result = new Result();
 		HttpServletRequest req = Mvcs.getReq();
 		String about = req.getParameter("about");
-		
 		try {
 			if(StringUtils.isEmpty(unit) || deviceId == 0 || StringUtils.isEmpty(title) || StringUtils.isEmpty(type)) {
 				result.setErrorCode(Constants.PARAM_ERROR);
@@ -68,9 +68,9 @@ public class SensorModule extends CloudModule{
 			s.setUserKey(d.getUserKey());
 			s.setAbout(about);
 			s.setTitle(title);
+			s.setUnit(unit);
 			s.setType(Integer.parseInt(type));
 			s.setDeviceId(deviceId);
-			s.setUnit(unit);
 			
 			sensorsDao.save(s);
 			renderJson(Json.toJson(s.getSensorId()), Mvcs.getResp());
@@ -116,6 +116,7 @@ public class SensorModule extends CloudModule{
 		HttpServletRequest req = Mvcs.getReq();
 		String about = req.getParameter("about");
 		String newDeviceId = req.getParameter("newDeviceId");
+		String unit = req.getParameter("unit");
 		try {
 			if(StringUtils.isEmpty(userKey) || StringUtils.isEmpty(title) || StringUtils.isEmpty(type) || sensorId == 0) {
 				result.setErrorCode(Constants.PARAM_ERROR);
@@ -140,7 +141,9 @@ public class SensorModule extends CloudModule{
 			sensors.setTitle(title);
 			sensors.setType(Integer.parseInt(type));
 			sensors.setAbout(about);
-			
+			if(StringUtils.isEmpty(unit)) {
+				sensors.setUnit(unit);
+			}
 			sensorsDao.update(sensors);
 			
 			result.setErrorCode(Constants.SUCCESS_CODE);
@@ -182,4 +185,18 @@ public class SensorModule extends CloudModule{
 		
 		renderJson(Json.toJson(result), Mvcs.getResp());
 	}
+	
+	@At("/v1.0/sensor/getSensors")
+	@AdaptBy(type=PairAdaptor.class)
+	public void getSensors(@Param("deviceId")int deviceId){
+		List<Sensors> sensors = sensorsDao.getSensorByDeviceId(deviceId);
+		
+		int[] ids = new int[sensors.size()];
+		for(int i = 0; i < sensors.size(); i ++) {
+			ids[i] = sensors.get(i).getSensorId();
+		}
+		
+		renderJson(Json.toJson(ids), Mvcs.getResp());
+	}
+	
 }

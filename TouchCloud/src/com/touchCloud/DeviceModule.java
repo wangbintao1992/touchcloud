@@ -24,6 +24,7 @@ import com.touchCloud.dao.UserDao;
 import com.touchCloud.pojo.Devices;
 import com.touchCloud.pojo.HeatMapVo;
 import com.touchCloud.pojo.Sensors;
+import com.touchCloud.pojo.User;
 import com.touchCloud.vo.Constants;
 import com.touchCloud.vo.Result;
 
@@ -34,6 +35,7 @@ import com.touchCloud.vo.Result;
 @IocBean
 public class DeviceModule extends CloudModule{
 	
+	@Inject
 	private UserDao userDao;
 	
 	@Inject
@@ -135,6 +137,9 @@ public class DeviceModule extends CloudModule{
 		String lat = req.getParameter("lat");
 		String lng = req.getParameter("lng");
 		String newUserKey = req.getParameter("newUserKey");
+		String count = req.getParameter("count");
+		String type = req.getParameter("type");
+		String name = req.getParameter("name");
 		try {
 			if(deviceId == 0 || StringUtils.isEmpty(userKey)) {
 				result.setErrorCode(Constants.PARAM_ERROR);
@@ -156,7 +161,13 @@ public class DeviceModule extends CloudModule{
 			device.setAbout(about);
 			device.setLat(lat == null ? 0.0 : Double.parseDouble(lat));
 			device.setLng(lng == null ? 0.0 : Double.parseDouble(lng));
-			
+			device.setCount(StringUtils.isEmpty(count) == true ?  0 : Integer.parseInt(count));
+			if(StringUtils.isNotEmpty(name)) {
+				device.setDeviceName(name);
+			}
+			if(StringUtils.isNotEmpty(type)) {
+				device.setType(type);
+			}
 			if(StringUtils.isNotEmpty(newUserKey)) {
 				
 				if(userDao.getUserById(newUserKey) == null) {
@@ -256,11 +267,22 @@ public class DeviceModule extends CloudModule{
 			return;
 		}
 		
+		User userByUserKey = userDao.getUserByUserKey(userKey);
+		
 		List<Devices> data = null;
-		if("4".equals(type)) {
-			data = devicesDao.getDevicesByUserKey(userKey);
+		if(userByUserKey.getName().equals("admin")) {
+			
+			if("4".equals(type)) {
+				data = devicesDao.getDevicesByType(type);
+			}else {
+				data = devicesDao.getAllDevices();
+			}
 		}else {
-			data = devicesDao.getDevicesByUserKeyAndType(userKey,type);
+			if("4".equals(type)) {
+				data = devicesDao.getDevicesByUserKey(userKey);
+			}else {
+				data = devicesDao.getDevicesByUserKeyAndType(userKey,type);
+			}
 		}
 		
 		List<HeatMapVo> map = new ArrayList<HeatMapVo>();

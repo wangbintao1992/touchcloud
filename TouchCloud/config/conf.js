@@ -11,5 +11,8 @@ var ioc = {
     dao : {
         type : "org.nutz.dao.impl.NutDao",
         args : [{refer:"dataSource"}]
+    },
+    timer : {
+    	type:"com.touchCloud.timer.TimerData"
     }
 }

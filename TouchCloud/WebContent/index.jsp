@@ -26,7 +26,7 @@
 .btn5{
 	position: fixed;
 	top: 240px;
-	right: 43px;
+	right: 50px;
 }
 </style>
 <head>
@@ -47,10 +47,10 @@
 </head>
 <body>
 	<div id="container"></div>
-	<button name="btn" value="1" class="btn1 btn btn-primary">水质</button>
-	<button name="btn" value="2" class="btn2 btn btn-success">大气</button>
-	<button name="btn" value="3" class="btn3 btn btn-info">土壤</button>
-	<button name="btn" value="4" class="btn4 btn btn-warning">全部</button>
+	<button name="btn" value="1" class="btn1 btn btn-primary">水&nbsp;&nbsp;&nbsp;质</button>
+	<button name="btn" value="2" class="btn2 btn btn-success">大&nbsp;&nbsp;&nbsp;气</button>
+	<button name="btn" value="3" class="btn3 btn btn-info">土&nbsp;&nbsp;&nbsp;壤</button>
+	<button name="btn" value="4" class="btn4 btn btn-warning">全&nbsp;&nbsp;&nbsp;部</button>
 	<button name="btn" value="" id="md" class="btn5 btn btn-danger">麻点图</button>
 	<input type="hidden" id="userKey" value="${sessionScope.userKey}"/>
 </body>

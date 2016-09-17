@@ -27,6 +27,8 @@ import com.touchCloud.pojo.Sensors;
 import com.touchCloud.vo.Constants;
 import com.touchCloud.vo.Result;
 
+import net.sf.json.JSONArray;
+
 @IocBean
 public class DatapointModule extends CloudModule{
 	
@@ -214,5 +216,18 @@ public class DatapointModule extends CloudModule{
 			}
 		}
 		return false;
+	}
+	
+	@At("/getData")
+	public void getData(@Param("sensorId") String sensorId){
+		
+		int[] ids = Json.fromJson(int[].class, sensorId);
+		
+		JSONArray arr = new JSONArray();
+		for(Integer id : ids) {
+			DataPoint data = dpDao.getData(id);
+			arr.add(data);
+		}
+		renderJson(Json.toJson(arr), Mvcs.getResp());
 	}
 }
