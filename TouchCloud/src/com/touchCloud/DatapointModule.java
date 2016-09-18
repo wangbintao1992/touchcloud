@@ -1,6 +1,7 @@
 package com.touchCloud;
 
 
+import java.text.SimpleDateFormat;
 import java.util.Date;
 import java.util.List;
 
@@ -28,6 +29,7 @@ import com.touchCloud.vo.Constants;
 import com.touchCloud.vo.Result;
 
 import net.sf.json.JSONArray;
+import net.sf.json.JSONObject;
 
 @IocBean
 public class DatapointModule extends CloudModule{
@@ -221,12 +223,20 @@ public class DatapointModule extends CloudModule{
 	@At("/getData")
 	public void getData(@Param("sensorId") String sensorId){
 		
+		SimpleDateFormat df = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
+		
 		int[] ids = Json.fromJson(int[].class, sensorId);
 		
 		JSONArray arr = new JSONArray();
 		for(Integer id : ids) {
 			DataPoint data = dpDao.getData(id);
-			arr.add(data);
+			Sensors s = sensorsDao.getById(id);
+			JSONObject obj = new JSONObject();
+			obj.put("title", s.getTitle());
+			obj.put("value", data.getValue());
+			obj.put("time", df.format(data.getTimestamp()));
+			obj.put("unit", s.getUnit());
+			arr.add(obj);
 		}
 		renderJson(Json.toJson(arr), Mvcs.getResp());
 	}

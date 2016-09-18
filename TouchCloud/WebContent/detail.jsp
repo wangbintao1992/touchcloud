@@ -7,6 +7,7 @@
 <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
  <script type="text/javascript" src="/TouchCloud/js/jquery-2.1.1.min.js"></script>
     <link rel="stylesheet" href="/TouchCloud/js/bootstrap.min.css">
+    <script type="text/javascript" src="/TouchCloud/js/highcharts.js"></script>
 <title>Insert title here</title>
 <style type="text/css">
 *{
@@ -107,18 +108,17 @@
 			histort-data 历史数据区
 		</div>
 		<div class="row" id="dArr">
-			<dir class="d col-md-6" id="">
-			a
+			<dir class="d col-md-6" id="container">
+
 			</dir>
 		</div>
 	</div>
 </body>
-<button id="t">asd</button>
 <script type="text/javascript">
 	var id = "${requestScope.id}";
 	var userKey = "${sessionScope.userKey}";
 	$(document).ready(function(){
-		$.get("/TouchCloud/v1.0/user/check?userKey=" + userKey,function(data) {
+		/*$.get("/TouchCloud/v1.0/user/check?userKey=" + userKey,function(data) {
 			if(data == "" || data.errorCode == "0001") {
 				window.location.href = "/TouchCloud/login.jsp";
 				return;
@@ -145,20 +145,18 @@
 		$.get("/TouchCloud/v1.0/sensor/getSensors?deviceId=" + id,function(data) {
 			sids = data;
 		});
-		
-		if(x in sids) {
-			var s = "s";
-			$("#sArr").append("<div class='col-md-2 sdetial' ><p class='p1'>" + 
-					"<span>溶解氧</span></p><p class='p2'><span>asd</span></p><p class='p3'>" + 
-					"<span>mg/l</span></p><p class='p4'><span>2014/1/2/1</span></p></div>");
-			
-		}
-		
+
 		setInterval(function(){
 			$.get("/TouchCloud/getData?sensorId=" + sids,function(data){
-				console.log(data);
+				var arr = JSON.parse(data);
+				for(var i = 0; i < arr.length; i ++) {
+					$("#sArr").append("<div class='col-md-2 sdetial' ><p class='p1'>" + 
+							"<span>" + arr[i].title + "</span></p><p class='p2'><span>" + arr[i].value + "</span></p><p class='p3'>" + 
+							"<span>"+ arr[i].unit + "</span></p><p class='p4'><span>" + arr[i].time + "</span></p></div>");
+				}
 			});
 		}, 3000)
+		*/
 		/*$("#add").bind("click",function(){
 			var arr = $("#sArr").children("div");
 			
@@ -192,6 +190,76 @@
 		$("#t").bind("click",function(){
 			ws.send("asd");
 		});*/
+		 Highcharts.setOptions({
+	            global: {
+	                useUTC: false
+	            }
+	        });
+	     $('#container').highcharts({
+	            chart: {
+	                type: 'spline',
+	                animation: Highcharts.svg, // don't animate in old IE
+	                marginRight: 10,
+	                events: {
+	                    load: function () {
+	                        // set up the updating of the chart each second
+	                        var series = this.series[0];
+	                        setInterval(function () {
+	                            var x = (new Date()).getTime(), // current time
+	                                y = Math.random();
+	                            series.addPoint([x, y], true, true);
+	                        }, 3000);
+	                    }
+	                }
+	            },
+	            title: {
+	                text: 'Live random data'
+	            },
+	            xAxis: {
+	                type: 'datetime',
+	                tickPixelInterval: 30,
+	                minRange: 1000
+	            },
+	            yAxis: {
+	                title: {
+	                    text: 'Value'
+	                },
+	                plotLines: [{
+	                    value: 0,
+	                    width: 1,
+	                    color: '#808080'
+	                }]
+	            },
+	            tooltip: {
+	                formatter: function () {
+	                    return '<b>' + this.series.name + '</b><br/>' +
+	                        Highcharts.dateFormat('%Y-%m-%d %H:%M:%S', this.x) + '<br/>' +
+	                        Highcharts.numberFormat(this.y, 2);
+	                }
+	            },
+	            legend: {
+	                enabled: false
+	            },
+	            exporting: {
+	                enabled: false
+	            },
+	            series: [{
+	                name: 'Random data',
+	                data: (function () {
+	                    // generate an array of random data
+	                    var data = [],
+	                        time = (new Date()).getTime(),
+	                        i;
+	                    for (i = -19; i <= 0; i += 1) {
+	                        data.push({
+	                            x: time + i * 1000,
+	                            y: Math.random()
+	                        });
+	                    }
+	                    return data;
+	                }())
+	            }]
+	        });
 	});
 </script>
 </html>
