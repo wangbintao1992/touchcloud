@@ -225,19 +225,28 @@ public class DatapointModule extends CloudModule{
 		
 		SimpleDateFormat df = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
 		
-		int[] ids = Json.fromJson(int[].class, sensorId);
-		
-		JSONArray arr = new JSONArray();
-		for(Integer id : ids) {
-			DataPoint data = dpDao.getData(id);
-			Sensors s = sensorsDao.getById(id);
+		String[] arr = sensorId.split(",");
+		JSONArray result = new JSONArray();
+		for(String id : arr) {
+			DataPoint data = dpDao.getData(Integer.parseInt(id));
+			Sensors s = sensorsDao.getById(Integer.parseInt(id));
 			JSONObject obj = new JSONObject();
 			obj.put("title", s.getTitle());
 			obj.put("value", data.getValue());
 			obj.put("time", df.format(data.getTimestamp()));
 			obj.put("unit", s.getUnit());
-			arr.add(obj);
+			result.add(obj);
 		}
-		renderJson(Json.toJson(arr), Mvcs.getResp());
+		renderJson(Json.toJson(result), Mvcs.getResp());
+	}
+	
+	@At("/getChartData")
+	public void getChartData(@Param("sensorId") int id) {
+		SimpleDateFormat df = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
+		DataPoint data = dpDao.getData(id);
+		JSONObject obj = new JSONObject();
+		obj.put("value", data.getValue());
+		obj.put("time", df.format(data.getTimestamp()));
+		renderJson(obj.toString(), Mvcs.getResp());
 	}
 }

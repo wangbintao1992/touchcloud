@@ -55,7 +55,6 @@
 .p1{
 	color: white;
 	font-size: 20px;
-	margin-top:10px;
 	margin-bottom: 0px;
 }
 .p2{
@@ -108,7 +107,10 @@
 			histort-data 历史数据区
 		</div>
 		<div class="row" id="dArr">
-			<dir class="d col-md-6" id="container">
+			<dir class="d col-md-6" id="h1">
+
+			</dir>
+			<dir class="d col-md-6" id="h2">
 
 			</dir>
 		</div>
@@ -116,9 +118,11 @@
 </body>
 <script type="text/javascript">
 	var id = "${requestScope.id}";
+	var tmpSensorId = "${requestScope.tmpSensorId}";
+	var tmpSensorArr = tmpSensorId.split(",");
 	var userKey = "${sessionScope.userKey}";
 	$(document).ready(function(){
-		/*$.get("/TouchCloud/v1.0/user/check?userKey=" + userKey,function(data) {
+		$.get("/TouchCloud/v1.0/user/check?userKey=" + userKey,function(data) {
 			if(data == "" || data.errorCode == "0001") {
 				window.location.href = "/TouchCloud/login.jsp";
 				return;
@@ -147,8 +151,9 @@
 		});
 
 		setInterval(function(){
+			$("#sArr").html("");
 			$.get("/TouchCloud/getData?sensorId=" + sids,function(data){
-				var arr = JSON.parse(data);
+				var arr = data;
 				for(var i = 0; i < arr.length; i ++) {
 					$("#sArr").append("<div class='col-md-2 sdetial' ><p class='p1'>" + 
 							"<span>" + arr[i].title + "</span></p><p class='p2'><span>" + arr[i].value + "</span></p><p class='p3'>" + 
@@ -156,46 +161,12 @@
 				}
 			});
 		}, 3000)
-		*/
-		/*$("#add").bind("click",function(){
-			var arr = $("#sArr").children("div");
-			
-			if(arr.length == 6) {
-				return;
-			}
-			
-			$("#sArr").append("<div class='col-md-2 sdetial'></div>");
-			$("#dArr").append("<dir class='d col-md-6' ></dir>");
-		});
-		
-		$("#sub").bind("click",function(){
-			var arr = $("#sArr").children();
-			var darr = $("#dArr").children();
-			if(arr.length == 0) {
-				return;
-			}
-			arr[arr.length - 1].remove();
-			darr[darr.length - 1].remove();
-		});*/
-		
-		/*var ws = new WebSocket("ws://localhost:8080/TouchCloud/data"); 
-		 
-		ws.onopen = function(){
-			ws.send("asd");
-		}; 
-		 ws.onmessage = function(evt){
-			 console.log(evt.data);
-		}; 
-		
-		$("#t").bind("click",function(){
-			ws.send("asd");
-		});*/
 		 Highcharts.setOptions({
 	            global: {
 	                useUTC: false
 	            }
 	        });
-	     $('#container').highcharts({
+		 $('#h1').highcharts({
 	            chart: {
 	                type: 'spline',
 	                animation: Highcharts.svg, // don't animate in old IE
@@ -205,9 +176,13 @@
 	                        // set up the updating of the chart each second
 	                        var series = this.series[0];
 	                        setInterval(function () {
-	                            var x = (new Date()).getTime(), // current time
-	                                y = Math.random();
-	                            series.addPoint([x, y], true, true);
+	                           $.get("/TouchCloud/getChartData?sensorId=" + tmpSensorArr[0],function(data){
+	                        	    //var x = Date.parse(new Date(data.time));
+	                        	    //x = x / 1000;
+	                   				var x = (new Date()).getTime();
+	                        	    var y = parseInt(data.value);
+	                   				series.addPoint([x, y], true, true);
+	                   			});
 	                        }, 3000);
 	                    }
 	                }
@@ -232,6 +207,8 @@
 	            },
 	            tooltip: {
 	                formatter: function () {
+	                	console.log(this.x);
+	                	console.log(Highcharts.dateFormat('%Y-%m-%d %H:%M:%S', this.x));
 	                    return '<b>' + this.series.name + '</b><br/>' +
 	                        Highcharts.dateFormat('%Y-%m-%d %H:%M:%S', this.x) + '<br/>' +
 	                        Highcharts.numberFormat(this.y, 2);
@@ -244,16 +221,87 @@
 	                enabled: false
 	            },
 	            series: [{
-	                name: 'Random data',
+	                name: 'sensor data point',
 	                data: (function () {
 	                    // generate an array of random data
 	                    var data = [],
 	                        time = (new Date()).getTime(),
 	                        i;
-	                    for (i = -19; i <= 0; i += 1) {
+	                    for (i = -5; i <= 0; i += 1) {
 	                        data.push({
 	                            x: time + i * 1000,
-	                            y: Math.random()
+	                            y: 0
+	                        });
+	                    }
+	                    return data;
+	                }())
+	            }]
+	        });
+		 $('#h2').highcharts({
+	            chart: {
+	                type: 'spline',
+	                animation: Highcharts.svg, // don't animate in old IE
+	                marginRight: 10,
+	                events: {
+	                    load: function () {
+	                        // set up the updating of the chart each second
+	                        var series = this.series[0];
+	                        setInterval(function () {
+	                           $.get("/TouchCloud/getChartData?sensorId=" + tmpSensorArr[1],function(data){
+	                        	    //var x = Date.parse(new Date(data.time));
+	                        	    //x = x / 1000;
+	                   				var x = (new Date()).getTime();
+	                        	    var y = parseInt(data.value);
+	                   				series.addPoint([x, y], true, true);
+	                   			});
+	                        }, 3000);
+	                    }
+	                }
+	            },
+	            title: {
+	                text: 'Live random data'
+	            },
+	            xAxis: {
+	                type: 'datetime',
+	                tickPixelInterval: 30,
+	                minRange: 1000
+	            },
+	            yAxis: {
+	                title: {
+	                    text: 'Value'
+	                },
+	                plotLines: [{
+	                    value: 0,
+	                    width: 1,
+	                    color: '#808080'
+	                }]
+	            },
+	            tooltip: {
+	                formatter: function () {
+	                	console.log(this.x);
+	                	console.log(Highcharts.dateFormat('%Y-%m-%d %H:%M:%S', this.x));
+	                    return '<b>' + this.series.name + '</b><br/>' +
+	                        Highcharts.dateFormat('%Y-%m-%d %H:%M:%S', this.x) + '<br/>' +
+	                        Highcharts.numberFormat(this.y, 2);
+	                }
+	            },
+	            legend: {
+	                enabled: false
+	            },
+	            exporting: {
+	                enabled: false
+	            },
+	            series: [{
+	                name: 'sensor data point',
+	                data: (function () {
+	                    // generate an array of random data
+	                    var data = [],
+	                        time = (new Date()).getTime(),
+	                        i;
+	                    for (i = -5; i <= 0; i += 1) {
+	                        data.push({
+	                            x: time + i * 1000,
+	                            y: 0
 	                        });
 	                    }
 	                    return data;

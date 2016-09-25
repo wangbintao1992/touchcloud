@@ -1,9 +1,11 @@
 package com.touchCloud;
 
+import java.io.IOException;
 import java.util.List;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
+import javax.servlet.ServletException;
 import javax.servlet.http.HttpServletRequest;
 
 import org.apache.commons.lang.StringUtils;
@@ -197,6 +199,36 @@ public class SensorModule extends CloudModule{
 		}
 		
 		renderJson(Json.toJson(ids), Mvcs.getResp());
+	}
+	
+	@At("/detail")
+	public void dispathcer(@Param("param")int deviceId) {
+		try {
+			List<Sensors> sensors = sensorsDao.getSensorByDeviceId(deviceId);
+			
+			int size = sensors.size();
+			
+			String url = "/detail" + size + ".jsp";
+			HttpServletRequest req = Mvcs.getReq();
+			
+			String ids = "";
+			
+			for(int i = 0; i < size; i ++) {
+				
+				ids += sensors.get(i).getSensorId();
+				
+				if(size != i) {
+					ids += ",";
+				}
+			}
+			
+			req.setAttribute("tmpSensorId", ids);
+			req.getRequestDispatcher(url).forward(req, Mvcs.getResp());
+		} catch (ServletException e) {
+			e.printStackTrace();
+		} catch (IOException e) {
+			e.printStackTrace();
+		}
 	}
 	
 }

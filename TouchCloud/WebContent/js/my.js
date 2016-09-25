@@ -71,6 +71,6 @@ $(document).ready(function() {
 		
 		function attribute(e){
 			var p = e.target;
-			window.open("/TouchCloud/detail.jsp?param=" + p.id);
+			window.location.href = "/TouchCloud/detail?param=" + p.id;
 		}
 }); 
